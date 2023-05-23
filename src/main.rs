@@ -1,11 +1,12 @@
-//use dotenv;
-
 use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::model::gateway::Ready;
 use serenity::prelude::*;
 
 struct Handler;
+
+const VIOLATION_MESSAGE: &str = 
+    "VERY BAD! 20 social credits have been deducted 低等公民 and your internet access card 上网通行证 has been suspended for: [24 Hours]. Please refrain from mentioning events that never happened that could discredit the great 人民共产党 People’s Communist Party again or we will be forced to 饿了就睡觉 send party agents to escort you to a re-education van [人民行刑车].";
 
 #[async_trait]
 impl EventHandler for Handler {
@@ -22,13 +23,31 @@ impl EventHandler for Handler {
             msg.channel_id.to_string(), 
             msg.content.to_string()
         );
+    
+        let channel_name = match msg.channel(&ctx).await {
+            Ok(channel) => {
+                match channel.guild() {
+                    Some(guild_channel) => {
+                        guild_channel.name().to_string()
+                    },
+                    None => {
+                        println!("Not a guild channel?!");
+                        "".to_string()
+                    },
+                }
+            },
+            Err(why) => {
+                println!("Error getting channel: {:?}", why);
+                "".to_string()
+            },  
+        };
 
-        if msg.channel_id.to_string() == "1096174554168184923" {
+        if channel_name.eq("tiananmen-square") {
             if let Err(why) = msg.channel_id.delete_message(&ctx.http, msg.id).await {
                 println!("Error deleting message: {:?}", why);
             }
            
-            if let Err(why) = msg.author.direct_message(&ctx.http, |m| m.content("VERY BAD! 20 social credits have been deducted 低等公民 and your internet access card 上网通行证 has been suspended for: [24 Hours]. Please refrain from mentioning events that never happened that could discredit the great 人民共产党 People’s Communist Party again or we will be forced to 饿了就睡觉 send party agents to escort you to a re-education van [人民行刑车].")).await {
+            if let Err(why) = msg.author.direct_message(&ctx.http, |m| m.content(VIOLATION_MESSAGE)).await {
                 println!("Error sending message: {:?}", why);
             }
 
